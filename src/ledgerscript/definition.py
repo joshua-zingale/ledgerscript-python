@@ -1,13 +1,11 @@
-import typing as t
+import bisect
+import enum
 from dataclasses import dataclass
 import functools
 import re
+import typing as t
 
 from .parsing import Production, BinOp, UnaryOp, parse_expression
-
-
-expression_regex = re.compile(r"@=([a-zA-Z](?:[a-zA-Z\d_]*[a-zA-Z\d])?)\[([^\]]*)\]")
-
 
 class RedifinitionError(RuntimeError):
     def __init__(self, redefined_names: t.Sequence[t.Sequence["Definition"]]) -> None:
@@ -63,7 +61,7 @@ def resolve_definitions(definitions: list["Definition"]) -> dict[str, float]:
 
 
 
-
+expression_regex = re.compile(r"@=([a-zA-Z](?:[a-zA-Z\d_]*[a-zA-Z\d])?)\[([^\]]*)\]")
 def get_definitions(source: str) -> list["Definition"]:
     definitions = list(map(lambda x: Definition(span=x.span(), name=x.groups()[0], production=parse_expression(x.groups()[1])), expression_regex.finditer(source)))
     return definitions
@@ -77,7 +75,41 @@ class Definition:
     @functools.cached_property
     def dependencies(self):
         return get_dependencies(self.production)
-    
+
+
+class ReferenceDirection(enum.Enum):
+    LEFT = 1
+    RIGHT = 2
+
+@dataclass
+class Reference:
+    span: tuple[int,int]
+    direction: ReferenceDirection
+
+@dataclass
+class ResolvedReference:
+    span: tuple[int,int]
+    name: str
+
+reference_regex = re.compile(r"@[<>]")
+def get_references(source: str) -> list[Reference]:
+    return list(map(lambda x: Reference(
+        span=x.span(),
+        direction= ReferenceDirection.LEFT if "<" in x.group() else ReferenceDirection.RIGHT),
+        reference_regex.finditer(source)))
+
+def resolve_references(references: list[Reference], definitions: list[Definition]) -> list[ResolvedReference]:
+
+    definitions = sorted(definitions, key=lambda x: x.span[0])
+
+    return list(map(
+        lambda x: ResolvedReference(
+            x.span,
+            name=definitions[(bisect.bisect_left(definitions, x.span[0], key=lambda d: d.span[0]) - (1 if x.direction == ReferenceDirection.LEFT else 0)) % len(definitions)].name,
+        ),
+        references))
+
+
 
 class UndefinedNameError(ValueError):
     def __init__(self, name: str) -> None:

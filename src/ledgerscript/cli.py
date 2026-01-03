@@ -1,5 +1,7 @@
 import sys
+from .compilation import compile
 
-from .definition import get_definitions, resolve_definitions
+    
+
 def ledgerscript_cli():
-    print(resolve_definitions(get_definitions(sys.stdin.read())))
+    print(compile(sys.stdin.read()))

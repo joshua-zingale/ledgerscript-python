@@ -1,1 +1,1 @@
-I made @=Job[13 + 3] dollars from @< this year, that makes @=Job_two_year[Job + Job*(1+Raise_percent/100)] for two years, given a @=Raise_percent[25]% raise.
+I made @=Spring_TA[100000] dollars from my @< this year, that makes @=Annual_Salary[Spring_TA*3 + Summer_Pay] for my @< if the same rate is earned for all three academic quarters and if my @> is @=Summer_Pay[6000].
