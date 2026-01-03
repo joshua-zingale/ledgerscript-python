@@ -3,4 +3,4 @@ from .compilation import compile
 
 
 def ledgerscript_cli():
-    print(compile(sys.stdin.read()))
+    sys.stdout.write(compile(sys.stdin.read()))
