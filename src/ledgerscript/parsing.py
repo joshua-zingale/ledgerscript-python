@@ -86,7 +86,7 @@ def make_tokenizer[T](
 
 _tokenize_expression = make_tokenizer(
     {
-        r"[a-zA-Z][\w_]+": TokenKind.NAME,
+        r"[a-zA-Z][\w_]*": TokenKind.NAME,
         r"(?:\d*\.)?\d+": TokenKind.NUM,
         r"\+": TokenKind.PLUS,
         r"-": TokenKind.MINUS,

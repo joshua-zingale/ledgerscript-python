@@ -9,7 +9,7 @@ from .parsing import Production, BinOp, UnaryOp, parse_expression
 
 
 class RedifinitionError(RuntimeError):
-    def __init__(self, redefined_names: t.Sequence[t.Sequence["Definition"]]) -> None:
+    def __init__(self, redefined_names: t.Collection[t.Sequence["Definition"]]) -> None:
         assert redefined_names
         super().__init__(
             f"The following name{'s' if len(redefined_names) > 1 else ''} have multiple definitions: {','.join(map(lambda x: x[0].name, redefined_names))}"
@@ -28,14 +28,13 @@ class CircularDefinitionError(RuntimeError):
 
 class MissingDefinitionError(RuntimeError):
     def __init__(self, undefined_names: t.Collection[str]) -> None:
-        assert len(undefined_names) > 1
         super().__init__(
             f"The following names are undefined: {','.join(map(lambda x: x, undefined_names))}"
         )
         self.undefined_names = undefined_names
 
 
-def resolve_definitions(definitions: list["Definition"]) -> dict[str, float]:
+def resolve_definitions(definitions: t.Collection["Definition"]) -> dict[str, float]:
     names = set(map(lambda d: d.name, definitions))
     if len(names) < len(definitions):
         name_to_definitions: dict[str, list[Definition]] = {}
@@ -51,6 +50,10 @@ def resolve_definitions(definitions: list["Definition"]) -> dict[str, float]:
                 )
             )
         )
+
+    if dependencies := set[str]().union(*map(lambda x: x.dependencies, definitions)):
+        if missing_dependencies := dependencies - names:
+            raise MissingDefinitionError(missing_dependencies)
 
     name_to_definition = {definition.name: definition for definition in definitions}
 
@@ -140,7 +143,7 @@ def get_references(source: str) -> list[Reference]:
 
 
 def resolve_references(
-    references: list[Reference], definitions: list[Definition]
+    references: t.Iterable[Reference], definitions: t.Iterable[Definition]
 ) -> list[ResolvedReference]:
     definitions = sorted(definitions, key=lambda x: x.span[0])
 

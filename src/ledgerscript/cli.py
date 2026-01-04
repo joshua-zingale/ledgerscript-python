@@ -1,6 +1,10 @@
 import sys
-from .compilation import compile
+from .compilation import compile_str
 
 
-def ledgerscript_cli():
-    sys.stdout.write(compile(sys.stdin.read()))
+def main():
+    cli(sys.argv)
+
+
+def cli(argv: list[str]):
+    sys.stdout.write(compile_str(sys.stdin.read()))
