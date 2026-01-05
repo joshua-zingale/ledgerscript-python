@@ -14,6 +14,8 @@ from .definition import (
 )
 
 
+class CompilationError(Exception): pass
+
 @dataclass
 class SourceFile:
     content: str
@@ -52,7 +54,7 @@ def compile_str(source: str) -> str:
     return compile_obj(obj_file, namespace)
 
 
-class CrossFileRedefinitionError(RuntimeError):
+class CrossFileRedefinitionError(CompilationError):
     def __init__(self, redefined_names: t.Collection[str]) -> None:
         assert redefined_names
         super().__init__(

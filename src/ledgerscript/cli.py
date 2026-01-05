@@ -11,11 +11,17 @@ import os
 from pathlib import Path
 from argparse import ArgumentParser
 
+from .errors import ErrorInFile
 from .compilation import compile_str, compile, SourceFile
 
 
 def main():
-    cli(sys.argv)
+
+    try:
+        cli(sys.argv)
+    except ErrorInFile as e:
+        print(f"{e}")
+        print(f"{"":<4}{e.str_slice}")
 
 
 def cli(argv: list[str]):

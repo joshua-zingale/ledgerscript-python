@@ -5,10 +5,13 @@ import functools
 import re
 import typing as t
 
-from .parsing import Production, BinOp, UnaryOp, parse_expression
+from .errors import cast_to_file_error
+from .parsing import Production, BinOp, UnaryOp, parse_expression, ParsingError
 
 
-class RedifinitionError(RuntimeError):
+class DefinitionError(Exception): ...
+
+class RedifinitionError(DefinitionError):
     def __init__(self, redefined_names: t.Collection[t.Sequence["Definition"]]) -> None:
         assert redefined_names
         super().__init__(
@@ -17,7 +20,7 @@ class RedifinitionError(RuntimeError):
         self.redefined_names = redefined_names
 
 
-class CircularDefinitionError(RuntimeError):
+class CircularDefinitionError(DefinitionError):
     def __init__(self, affected_definitions: t.Collection[str]) -> None:
         assert len(affected_definitions) > 1
         super().__init__(
@@ -26,7 +29,7 @@ class CircularDefinitionError(RuntimeError):
         self.redefined_affected_definitionsnames = affected_definitions
 
 
-class MissingDefinitionError(RuntimeError):
+class MissingDefinitionError(DefinitionError):
     def __init__(self, undefined_names: t.Collection[str]) -> None:
         super().__init__(
             f"The following names are undefined: {','.join(map(lambda x: x, undefined_names))}"
@@ -73,9 +76,6 @@ def resolve_definitions(definitions: t.Collection["Definition"]) -> dict[str, fl
             )
             defined_names.add(undefined_name)
 
-    if undefined_names := names - defined_names:
-        raise MissingDefinitionError(undefined_names)
-
     assert set(namespace) == names
     return namespace
 
@@ -89,7 +89,7 @@ def get_definitions(source: str) -> list["Definition"]:
             lambda x: Definition(
                 span=x.span(),
                 name=x.groups()[0],
-                production=parse_expression(x.groups()[1]),
+                production=cast_to_file_error(source, x.span(), ParsingError, parse_expression, x.groups()[1]),
             ),
             expression_regex.finditer(source),
         )

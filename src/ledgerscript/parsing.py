@@ -32,11 +32,6 @@ class Token[T]:
     lexeme: str
 
 
-class InvalidExpressionError(RuntimeError):
-    def __init__(self) -> None:
-        super().__init__("Invalid Expression")
-
-
 op_precedence: dict[ArithmeticOperators, int] = {
     TokenKind.PLUS: 10,
     TokenKind.MINUS: 10,
@@ -47,7 +42,7 @@ op_precedence: dict[ArithmeticOperators, int] = {
 
 class InvalidTokenError(RuntimeError):
     def __init__(self, pos: int) -> None:
-        super().__init__(f"Invalid token at character {pos}")
+        super().__init__("invalid token")
         self.pos = pos
 
 
@@ -106,6 +101,10 @@ class ParsingError(RuntimeError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
+class InvalidExpressionError(ParsingError):
+    def __init__(self, error_reason: str) -> None:
+        super().__init__(f"invalid expression: {error_reason}")
+
 
 def parse_expression(source: str) -> "Production":
     tokens = tokenize_expression(source)
@@ -122,10 +121,12 @@ def parse_expression(source: str) -> "Production":
                 op_stack.append(TokenKind.LPAREN)
             case TokenKind.RPAREN:
                 operator = None
+
                 while op_stack and (operator := op_stack.pop()) != TokenKind.LPAREN:
                     productions.append(produce(operator, productions))
+
                 if not operator:
-                    raise ParsingError("Unmatched right parenthesis")
+                    raise InvalidExpressionError("unmatched right parenthesis")
             case TokenKind.PLUS | TokenKind.MINUS | TokenKind.MUL | TokenKind.DIV:
                 while (
                     op_stack
@@ -140,34 +141,37 @@ def parse_expression(source: str) -> "Production":
     while op_stack:
         tos = op_stack.pop()
         if tos == TokenKind.LPAREN:
-            raise ParsingError("Unmatched left parenthesis")
+            raise InvalidExpressionError("unmatched left parenthesis")
         productions.append(produce(tos, productions))
 
     if len(productions) != 1:
         print(productions)
-        raise ParsingError("Invalid expression")
+        raise InvalidExpressionError("missing operator(s)")
 
     return productions[0]
 
 
 def produce(operator: ArithmeticOperators, production_stack: list["Production"]):
-    match operator:
-        case TokenKind.PLUS:
-            return BinOp(
-                op.add, right=production_stack.pop(), left=production_stack.pop()
-            )
-        case TokenKind.MINUS:
-            return BinOp(
-                op.sub, right=production_stack.pop(), left=production_stack.pop()
-            )
-        case TokenKind.MUL:
-            return BinOp(
-                op.mul, right=production_stack.pop(), left=production_stack.pop()
-            )
-        case TokenKind.DIV:
-            return BinOp(
-                op.truediv, right=production_stack.pop(), left=production_stack.pop()
-            )
+    try:
+        match operator:
+            case TokenKind.PLUS:
+                return BinOp(
+                    op.add, right=production_stack.pop(), left=production_stack.pop()
+                )
+            case TokenKind.MINUS:
+                return BinOp(
+                    op.sub, right=production_stack.pop(), left=production_stack.pop()
+                )
+            case TokenKind.MUL:
+                return BinOp(
+                    op.mul, right=production_stack.pop(), left=production_stack.pop()
+                )
+            case TokenKind.DIV:
+                return BinOp(
+                    op.truediv, right=production_stack.pop(), left=production_stack.pop()
+                )
+    except IndexError:
+        raise InvalidExpressionError("missing operand")
 
 
 Production: t.TypeAlias = t.Union["BinOp", "UnaryOp", str, float]
