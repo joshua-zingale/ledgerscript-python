@@ -61,9 +61,9 @@ class CrossFileRedefinitionError(RuntimeError):
         self.redefined_names = redefined_names
 
 
-def compile(files: t.Iterable[Path]) -> t.Container[CompiledFile]:
-    obj_files = map(
-        compile_source, map(lambda x: SourceFile(content=open(x).read(), path=x), files)
+def compile(files: t.Iterable[SourceFile]) -> t.Collection[CompiledFile]:
+    obj_files = list(map(
+        compile_source, files)
     )
 
     all_definitions = [
