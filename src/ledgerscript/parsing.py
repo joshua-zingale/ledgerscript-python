@@ -101,6 +101,7 @@ class ParsingError(RuntimeError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
+
 class InvalidExpressionError(ParsingError):
     def __init__(self, error_reason: str) -> None:
         super().__init__(f"invalid expression: {error_reason}")
@@ -145,7 +146,6 @@ def parse_expression(source: str) -> "Production":
         productions.append(produce(tos, productions))
 
     if len(productions) != 1:
-        print(productions)
         raise InvalidExpressionError("missing operator(s)")
 
     return productions[0]
@@ -168,7 +168,9 @@ def produce(operator: ArithmeticOperators, production_stack: list["Production"])
                 )
             case TokenKind.DIV:
                 return BinOp(
-                    op.truediv, right=production_stack.pop(), left=production_stack.pop()
+                    op.truediv,
+                    right=production_stack.pop(),
+                    left=production_stack.pop(),
                 )
     except IndexError:
         raise InvalidExpressionError("missing operand")

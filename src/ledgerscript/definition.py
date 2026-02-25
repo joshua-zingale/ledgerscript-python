@@ -11,6 +11,7 @@ from .parsing import Production, BinOp, UnaryOp, parse_expression, ParsingError
 
 class DefinitionError(Exception): ...
 
+
 class RedifinitionError(DefinitionError):
     def __init__(self, redefined_names: t.Collection[t.Sequence["Definition"]]) -> None:
         assert redefined_names
@@ -89,7 +90,9 @@ def get_definitions(source: str) -> list["Definition"]:
             lambda x: Definition(
                 span=x.span(),
                 name=x.groups()[0],
-                production=cast_to_file_error(source, x.span(), ParsingError, parse_expression, x.groups()[1]),
+                production=cast_to_file_error(
+                    source, x.span(), ParsingError, parse_expression, x.groups()[1]
+                ),
             ),
             expression_regex.finditer(source),
         )

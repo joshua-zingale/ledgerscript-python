@@ -13,8 +13,12 @@ from .definition import (
     ResolvedReference,
 )
 
+from .errors import ErrorInFile
 
-class CompilationError(Exception): pass
+
+class CompilationError(Exception):
+    pass
+
 
 @dataclass
 class SourceFile:
@@ -37,9 +41,14 @@ class CompiledFile:
 
 
 def compile_source(source_file: SourceFile) -> ObjFile:
-    definitions = get_definitions(source_file.content)
-    references = get_references(source_file.content)
-    resolved_references = resolve_references(references, definitions)
+    try:
+        definitions = get_definitions(source_file.content)
+        references = get_references(source_file.content)
+        resolved_references = resolve_references(references, definitions)
+    except ErrorInFile as e:  # type: ignore[reportUnknownVariableType]
+        if source_file.path == "-":
+            raise
+        raise e.with_filename(source_file.path)
     return ObjFile(
         content=source_file.content,
         path=source_file.path,
@@ -64,9 +73,7 @@ class CrossFileRedefinitionError(CompilationError):
 
 
 def compile(files: t.Iterable[SourceFile]) -> t.Collection[CompiledFile]:
-    obj_files = list(map(
-        compile_source, files)
-    )
+    obj_files = list(map(compile_source, files))
 
     all_definitions = [
         definition
