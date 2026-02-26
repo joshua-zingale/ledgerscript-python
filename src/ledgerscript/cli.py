@@ -11,6 +11,7 @@ import sys
 import os
 from pathlib import Path
 from argparse import ArgumentParser
+import typing as t
 
 from .errors import ErrorInFile
 from .compilation import compile_str, compile, SourceFile
@@ -24,7 +25,7 @@ def main():
         print(f"{'':<4}{e.str_slice}")
 
 
-def cli(argv: list[str]):
+def cli(argv: list[str], stdin: t.TextIO = sys.stdin):
     parser = ArgumentParser(description=__doc__)
     parser.add_argument(
         "files",
@@ -51,7 +52,7 @@ def cli(argv: list[str]):
             with open(filepath, "w") as f:
                 f.write(compiled_file.content)
     else:
-        sys.stdout.write(compile_str(sys.stdin.read()))
+        sys.stdout.write(compile_str(stdin.read()))
 
 
 if __name__ == "__main__":
