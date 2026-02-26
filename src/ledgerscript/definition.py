@@ -161,7 +161,7 @@ def resolve_references(
                         )
                         - (1 if x.direction == ReferenceDirection.LEFT else 0)
                     )
-                    % len(definitions)
+                    % len(definitions) # Make references wrap around file
                 ].name,
             ),
             references,
