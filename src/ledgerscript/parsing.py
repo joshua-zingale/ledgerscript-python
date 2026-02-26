@@ -133,7 +133,7 @@ def parse_expression(source: str) -> "Production":
                     op_stack
                     and (tos := op_stack[-1])
                     and tos != TokenKind.LPAREN
-                    and op_precedence[token.kind] < op_precedence[tos]
+                    and op_precedence[token.kind] <= op_precedence[tos]
                 ):
                     op_stack.pop()
                     productions.append(produce(tos, productions))

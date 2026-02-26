@@ -26,6 +26,10 @@ def test_intra_definition_arithmetic():
     standard_input = """@=b[(3 * (1 + 3) - 2) / 2 + 3]"""
     assert _cli(standard_input).startswith("8")
 
+def test_operator_precedence():
+    standard_input = "@=b[4 - 3 + 2 * 10]."
+    assert _cli(standard_input).startswith("21")
+
 def test_arithmetic_with_variables():
     standard_input = """I make $@=yearly_salary[4*dollars_per_quarter] a year because I make @=dollars_per_quarter[10000] @<"""
     assert appear_in_order(_cli(standard_input), "I", "40", "000", "10000", "dollars per quarter")
