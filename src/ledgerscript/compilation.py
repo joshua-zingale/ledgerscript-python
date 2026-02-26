@@ -43,12 +43,12 @@ class CompiledFile:
 def compile_source(source_file: SourceFile) -> ObjFile:
     try:
         definitions = get_definitions(source_file.content)
-        references = get_references(source_file.content)
-        resolved_references = resolve_references(references, definitions)
     except ErrorInFile as e:  # type: ignore[reportUnknownVariableType]
         if source_file.path == "-":
             raise
         raise e.with_filename(source_file.path)
+    references = get_references(source_file.content)
+    resolved_references = resolve_references(references, definitions)
     return ObjFile(
         content=source_file.content,
         path=source_file.path,
